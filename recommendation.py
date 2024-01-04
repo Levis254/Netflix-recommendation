@@ -41,3 +41,46 @@ stopword=set(stopwords.words('english'))
 
 def clean(text):
     text=str(text).lower()
+    text=re.sub('\[.*?\]', '', text)
+    text=re.sub('https?://\S+|www.\.\S+', '', text)
+    text=re.sub('<.*?>+', '', text)
+    text=re.sub('[%s]'% re.escape(string.punctuation), '', text)
+    text=re.sub("\n",'', text)
+    text=re.sub('\w*\d\w*',"",text)
+    text=[word for word in text.split('') if word not in stopword]
+    text="".join(text)
+    return text
+
+data["Title"]=data["Title"].apply(clean)
+
+
+#view the cleaned title column
+
+print(data.Title.sample(10))
+
+#using the genres column, find the similarity in content (using cosine similarity)
+
+#first convert the Genre table to a list
+feature=data["Genre"].tolist()
+
+tfidf=text.TfidfVectorizer(input=feature, stop_words="english")
+tfidf_matrix=tfidf.fit_transform(feature)
+similarity=cosine_similarity(tfidf_matrix)
+
+
+#set the title column as an index so that we can find similar content
+#by giving the title of the movies or TV show as an input
+
+indices=pd.Series(data.index, index=data['Title']).drop_duplicates()
+
+#function to recommend Movies and TV shows
+
+def netflix_recommendation(title, similarity=similarity):
+    index=indices[title]
+    similarity_scores=list(enumerate(similarity[index]))
+    similarity_scores=sorted(similarity_scores, key=lambda x: x[1])
+    similarity_scores=similarity_scores[0:10]
+    movieindices=[i[0] for i in similarity_scores]
+    return data['Title'].iloc[movieindices]
+
+print(netflix_recommendation("girlfriend"))
