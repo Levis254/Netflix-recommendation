@@ -11,7 +11,7 @@ from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 
 #readin the data
 
-data=pd.read_csv('"C:/Users/levis/Downloads/Netflix-Subscriptions.csv"')
+data=pd.read_csv('C:/Users/levis/Downloads/Netflix-Subscriptions.csv')
 print(data.head())
 
 data['Time Period']=pd.to_datetime(data['Time Period'], format='%d/%m/%Y')
