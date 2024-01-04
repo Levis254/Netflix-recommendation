@@ -55,3 +55,56 @@ fig.update_layout(title='Netflix Yearly Subscriber Growth Rate',
                   yaxis_title='Yearly Growth Rate (%)')
 
 fig.show()
+
+#using ARIMA for forecasting Netflix quarterly subscriptions
+#first convert the original dataframe into a time series format
+#time period becomes the index and the subscribers becomes the data
+time_series=data.set_index('Time Period')['Subscribers']
+
+differenced_series=time_series.diff().dropna()
+
+fig, axes=plt.subplots(1,2, figsize=(12,4))
+plot_acf(differenced_series, ax=axes[0])
+plot_pacf(differenced_series, ax=axes[1])
+plt.show()
+
+p,d,q=1,1,1
+
+model=ARIMA(time_series, order=(p,d,q))
+
+results=model.fit()
+
+print(results.summary())
+
+
+future_steps=5
+
+predictions=results.predict(len(time_series), len(time_series)+future_steps-1)
+
+predictions.astype(int)
+
+#create a dataframe with original data and predictions
+
+forecast=pd.DataFrame({'Original':time_series, 'Predictions': predictions})
+
+#plot the original data and predictions
+
+fig=go.Figure()
+
+fig.add_trace(go.Scatter(x=forecast.index, 
+                         y=forecast['Predictions'],
+                         mode='lines',
+                         name='Predictions'))
+fig.add_trace(go.Scatter(x=forecast.index,
+                         y=forecast['Original'],
+                         mode='lines',
+                         name='Original Data'))
+
+fig.update_layout(title='Netflix Quarterly Subscription Predictions',
+                  xaxis_title='Time Period',
+                  yaxis_title='Subscriptions',
+                  legend=dict(x=0.1, y=0.9),
+                  showlegend=True)
+
+fig.show()
+
